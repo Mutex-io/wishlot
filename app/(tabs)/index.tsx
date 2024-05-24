@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Pressable, Text, FlatList } from 'react-native';
 import { WishItemType, WishListType } from '../../constants/types';
-import { fetchWishItems } from '../firebaseService';
+import { fetchWishItemsFromUserWishlist } from '../firebaseService';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 export default function HomeScreen() {
   const [wishList, setWishList] = useState<WishListType>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // DUMMY USER ID FOR TESTING
+  const userId = 'TfWgmgqOyMKm7rrsIXvR';
+
   useEffect(() => {
     const loadItems = async () => {
       try {
         setLoading(true);
-        const items = await fetchWishItems();
+        const items = await fetchWishItemsFromUserWishlist(userId);
         setWishList(items);
       } catch (error) {
         window.alert('Error fetching wish items');

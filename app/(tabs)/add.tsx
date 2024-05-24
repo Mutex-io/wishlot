@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Button, Text } from 'react-native';
 import { router } from 'expo-router';
 import { WishItemType } from '../../constants/types';
-import { addWishItem } from '../firebaseService';
+import { addWishItemToUserWishlist } from '../firebaseService';
 import Slider from '@react-native-community/slider';
 
 export default function add() {
@@ -13,6 +13,9 @@ export default function add() {
     id: '',
   });
 
+  // DUMMY USER ID FOR TESTING
+  const userId = 'TfWgmgqOyMKm7rrsIXvR';
+
   const handleInputChange = (
     field: keyof WishItemType,
     value: string | number,
@@ -21,17 +24,23 @@ export default function add() {
   };
 
   const handleAddItem = async () => {
+    if (!wishItem.title) {
+      window.alert('Validation Error Please fill in all required fields.');
+      return;
+    }
+
+    const newItem = { ...wishItem, id: new Date().valueOf().toString() };
+
     try {
-      const docId = await addWishItem(wishItem); // Assuming addWishItem returns a promise
-      if (docId) {
-        console.log('Document written with ID: ', docId);
-        setWishItem({ title: '', desc: '', rate: 0, id: '' });
-        router.navigate('/'); // TODO: for now redirect to home. later show success screen
-      } else {
-        window.alert('Error adding document');
-      }
+      const wishlistRef = await addWishItemToUserWishlist(userId, newItem);
+
+      window.alert('Success Wish item added successfully!');
+      console.log('added to wishlistRef: ', wishlistRef);
+      setWishItem({ title: '', desc: '', rate: 0, id: '' }); // Reset form fields
+      router.navigate('/');
     } catch (error) {
-      console.error('Error adding document: ', error);
+      console.error('Error adding wish item: ', error);
+      window.alert('Error Failed to add wish item.');
     }
   };
 
@@ -54,7 +63,7 @@ export default function add() {
         style={{ width: '100%', height: 40 }}
         minimumValue={0}
         maximumValue={10}
-        step={2}
+        step={1}
         value={wishItem.rate}
         onValueChange={(value) => handleInputChange('rate', value)}
         minimumTrackTintColor='#FFFFFF'
@@ -64,7 +73,7 @@ export default function add() {
       <Button
         title='Add Wish Item'
         onPress={handleAddItem}
-        disabled={!wishItem.title || wishItem.rate === 0}
+        disabled={!wishItem.title}
       />
     </View>
   );
